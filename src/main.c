@@ -29,6 +29,7 @@ int current_theme = 0;
 Component components[MAX_COMPONENTS];
 int componentCount = 0;
 
+
 int main() {
     int ch;
     int selected = 0;

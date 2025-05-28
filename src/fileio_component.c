@@ -1,8 +1,20 @@
 #include "../include/fileio_component.h"
+#include <stdlib.h>
+#include <string.h>
 
 // Load components from file
 void load_components() {
-    FILE *fp = fopen("components.txt", "r");
+    char filepath[256];
+    char* home = getenv("HOME");
+    
+    if (home == NULL) {
+        // Fallback if HOME environment variable isn't available
+        snprintf(filepath, sizeof(filepath), ".tasky_components.txt");
+    } else {
+        snprintf(filepath, sizeof(filepath), "%s/.tasky/components.txt", home);
+    }
+    
+    FILE *fp = fopen(filepath, "r");
     if (fp == NULL) {
         return; // File doesn't exist yet
     }
@@ -42,7 +54,28 @@ void load_components() {
 
 // Save components to file
 void save_components() {
-    FILE *fp = fopen("components.txt", "w");
+    char filepath[256];
+    char* home = getenv("HOME");
+    
+    if (home == NULL) {
+        // Fallback if HOME environment variable isn't available
+        snprintf(filepath, sizeof(filepath), ".tasky_components.txt");
+    } else {
+        snprintf(filepath, sizeof(filepath), "%s/.tasky/components.txt", home);
+    }
+    
+    // Create .tasky directory if it doesn't exist
+    if (home != NULL) {
+        char dirname[256];
+        snprintf(dirname, sizeof(dirname), "%s/.tasky", home);
+        
+        // This is a simple way to create a directory if it doesn't exist
+        char mkdir_cmd[300];
+        snprintf(mkdir_cmd, sizeof(mkdir_cmd), "mkdir -p %s", dirname);
+        system(mkdir_cmd);
+    }
+    
+    FILE *fp = fopen(filepath, "w");
     if (fp == NULL) {
         return; // Can't open file
     }
