@@ -8,96 +8,39 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}╔════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║           TCI Task Manager Setup           ║${NC}"
+echo -e "${BLUE}║             Tasky Installer                ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════╝${NC}"
 echo
 
-# Check for required dependencies
-echo -e "${YELLOW}Checking dependencies...${NC}"
-
-MISSING_DEPS=0
-
-# Check for git
-if ! command -v git &> /dev/null; then
-    echo -e "${RED}✗ Git is not installed. Please install git.${NC}"
-    MISSING_DEPS=1
-fi
-
-# Check for gcc
-if ! command -v gcc &> /dev/null; then
-    echo -e "${RED}✗ GCC is not installed. Please install gcc.${NC}"
-    MISSING_DEPS=1
-fi
-
-# Check for make
-if ! command -v make &> /dev/null; then
-    echo -e "${RED}✗ Make is not installed. Please install make.${NC}"
-    MISSING_DEPS=1
-fi
-
-# Check for ncurses
-if ! pkg-config --exists ncurses 2>/dev/null || ! ldconfig -p | grep -q libncurses; then
-    echo -e "${RED}✗ ncurses development library is not installed. Please install libncurses-dev.${NC}"
-    MISSING_DEPS=1
-fi
-
-if [ $MISSING_DEPS -eq 1 ]; then
-    echo
-    echo -e "${RED}Please install missing dependencies and run this script again.${NC}"
-    echo -e "${YELLOW}On Ubuntu/Debian:${NC} sudo apt-get install git gcc make libncurses-dev"
-    echo -e "${YELLOW}On Fedora:${NC} sudo dnf install git gcc make ncurses-devel"
-    echo -e "${YELLOW}On CentOS/RHEL:${NC} sudo yum install git gcc make ncurses-devel"
-    echo -e "${YELLOW}On Arch Linux:${NC} sudo pacman -S git gcc make ncurses"
+# Check if we're in the correct directory
+if [ ! -f "Makefile" ] || [ ! -d "src" ] || [ ! -d "include" ]; then
+    echo -e "${RED}Error: This script must be run from the Tasky root directory.${NC}"
+    echo -e "${YELLOW}Please run this script from the directory where you cloned the repository.${NC}"
     exit 1
 fi
-
-echo -e "${GREEN}✓ All dependencies are installed.${NC}"
-echo
-
-# Create temporary directory for building
-TEMP_DIR=$(mktemp -d)
-echo -e "${YELLOW}Creating temporary directory for building: ${TEMP_DIR}${NC}"
-cd "$TEMP_DIR" || exit 1
-
-# Clone the repository
-echo -e "${YELLOW}Cloning the repository from GitHub...${NC}"
-if git clone https://github.com/ayouz0/taski.git; then
-    echo -e "${GREEN}✓ Repository cloned successfully.${NC}"
-else
-    echo -e "${RED}✗ Failed to clone repository. Please check your internet connection.${NC}"
-    exit 1
-fi
-
-# Enter the repository directory
-cd taski || exit 1
 
 # Build the application
-echo -e "\n${YELLOW}Building the application...${NC}"
-if make; then
+echo -e "${YELLOW}Building Tasky...${NC}"
+if make clean && make; then
     echo -e "${GREEN}✓ Build completed successfully.${NC}"
 else
     echo -e "${RED}✗ Build failed. Please check the error messages above.${NC}"
     exit 1
 fi
 
-# Install the executable to /bin
-echo -e "\n${YELLOW}Installing the executable to /bin...${NC}"
+# Create necessary directories
+echo -e "\n${YELLOW}Setting up Tasky in your home directory...${NC}"
+mkdir -p "$HOME/.tasky"
+mkdir -p "$HOME/.local/bin"
 
+# Install the executable to user's bin directory
 if [ -x "./taskmanager" ]; then
-    # Check if we have sudo access
-    if command -v sudo &> /dev/null; then
-        echo -e "${YELLOW}Requesting administrator privileges to install to /bin...${NC}"
-        if sudo cp ./taskmanager /bin/taskmanager; then
-            sudo chmod 755 /bin/taskmanager
-            echo -e "${GREEN}✓ Installation successful! You can now run 'taskmanager' from anywhere.${NC}"
-        else
-            echo -e "${RED}✗ Failed to install to /bin. You might not have sufficient permissions.${NC}"
-            echo -e "${YELLOW}You can still run the program from: ${TEMP_DIR}/taski/taskmanager${NC}"
-            exit 1
-        fi
+    if cp ./taskmanager "$HOME/.local/bin/tasky"; then
+        chmod 755 "$HOME/.local/bin/tasky"
+        echo -e "${GREEN}✓ Installation successful!${NC}"
     else
-        echo -e "${RED}✗ The 'sudo' command is not available. Installation to /bin requires administrator privileges.${NC}"
-        echo -e "${YELLOW}You can still run the program from: ${TEMP_DIR}/taski/taskmanager${NC}"
+        echo -e "${RED}✗ Failed to install.${NC}"
+        echo -e "${YELLOW}You can still run the program locally with ./taskmanager${NC}"
         exit 1
     fi
 else
@@ -105,25 +48,46 @@ else
     exit 1
 fi
 
-# Create a data directory in user's home directory
-echo -e "\n${YELLOW}Creating data directory in your home folder...${NC}"
-mkdir -p "$HOME/.taskmanager"
-cp -f "$TEMP_DIR/taski/README.md" "$HOME/.taskmanager/" 2>/dev/null
-
-# Clean up
-echo -e "\n${YELLOW}Cleaning up temporary files...${NC}"
-cd
-rm -rf "$TEMP_DIR"
+# Add ~/.local/bin to PATH if it's not already there
+if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+    echo -e "\n${YELLOW}Adding ~/.local/bin to your PATH...${NC}"
+    
+    # Determine which shell config file to use
+    SHELL_CONFIG=""
+    if [ -f "$HOME/.bash_profile" ]; then
+        SHELL_CONFIG="$HOME/.bash_profile"
+    elif [ -f "$HOME/.bashrc" ]; then
+        SHELL_CONFIG="$HOME/.bashrc"
+    elif [ -f "$HOME/.zshrc" ]; then
+        SHELL_CONFIG="$HOME/.zshrc"
+    fi
+    
+    if [ -n "$SHELL_CONFIG" ]; then
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$SHELL_CONFIG"
+        echo -e "${GREEN}✓ Added ~/.local/bin to your PATH in $SHELL_CONFIG${NC}"
+        echo -e "${YELLOW}Please run 'source $SHELL_CONFIG' or restart your terminal to use tasky command${NC}"
+    else
+        echo -e "${YELLOW}Could not find shell config file. You may need to add ~/.local/bin to your PATH manually.${NC}"
+    fi
+fi
 
 echo
 echo -e "${BLUE}╔════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║           Installation Complete!           ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════╝${NC}"
 echo
-echo -e "${GREEN}You can now run TCI Task Manager by typing:${NC}"
-echo -e "${YELLOW}  taskmanager${NC}"
+echo -e "${GREEN}You can run Tasky by typing:${NC}"
+
+if [[ ":$PATH:" == *":$HOME/.local/bin:"* ]]; then
+    echo -e "${YELLOW}  tasky${NC}"
+else
+    echo -e "${YELLOW}  $HOME/.local/bin/tasky${NC}"
+    echo -e "${GREEN}Or after restarting your terminal:${NC}"
+    echo -e "${YELLOW}  tasky${NC}"
+fi
+
 echo
 echo -e "${GREEN}Your task data will be stored in:${NC}"
-echo -e "${YELLOW}  $HOME/.taskmanager/${NC}"
+echo -e "${YELLOW}  $HOME/.tasky/${NC}"
 echo
-echo -e "${GREEN}Thank you for installing TCI Task Manager!${NC}"
+echo -e "${GREEN}Thank you for installing Tasky!${NC}"

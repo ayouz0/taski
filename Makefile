@@ -30,7 +30,7 @@ SRCS = $(SRC_DIR)/main.c \
 OBJS = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
 
 # Target executable
-TARGET = $(BIN_DIR)/task_manager
+TARGET = taskmanager
 
 # Create directories if they don't exist
 DIRS = $(OBJ_DIR) $(BIN_DIR)
