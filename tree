@@ -1,0 +1,34 @@
+[PARSER]
+Implement lexer for command tokenization #high @ayouz0
+Create syntax tree generator #medium @teammate1
+Add support for special characters in quotes
+Handle pipe syntax validation #low
+Implement error reporting for syntax errors #high
+
+[EXECUTION]
+Create process execution module #high
+Implement pipe communication between processes @ayouz0
+Set up file redirection handlers #medium @teammate2
+Add signal handling for child processes
+Implement environment variable expansion #medium
+
+[BUILTINS]
+Implement cd command with path validation #medium
+Create echo command with proper flag support @teammate1
+Add exit command with status code handling #low @ayouz0
+Implement export command for environment variables
+Create unset command for environment variables #high
+
+[TESTING]
+Write unit tests for parser components #medium
+Create integration tests for pipe commands @teammate2
+Develop test suite for builtin commands #low @ayouz0
+Document test procedures and expected outputs
+Set up automated testing framework #high @teammate1
+
+[DOCUMENTATION]
+Create project architecture overview #low
+Write code documentation for core functions #medium @ayouz0
+Add user manual with examples
+Create developer guide for future contributors @teammate2
+Document known limitations and edge cases #high

@@ -1,0 +1,15 @@
+[PARSER]
+Tokenizer implementation #high @student1
+AST generation #medium
+Syntax validation
+Handle quotation marks @student2
+
+[EXECUTION]
+Process creation #high
+Pipe handling @student1
+Redirections #medium @student2
+
+[BUILTINS]
+cd implementation #low
+echo implementation
+export implementation @student1
